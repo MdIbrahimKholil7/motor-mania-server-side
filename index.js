@@ -16,19 +16,32 @@ console.log(uri)
 const run = async () => {
     try {
         await client.connect();
-        const serviceCollection=client.db('Bike_Parts').collection('services')
-        const helmetCollection=client.db('Bike_Parts').collection('helmet')
+        const serviceCollection = client.db('Bike_Parts').collection('services')
+        const helmetCollection = client.db('Bike_Parts').collection('helmet')
+        const partsCollection = client.db('Bike_Parts').collection('parts')
+        const reviewCollection = client.db('Bike_Parts').collection('review')
         // get service data 
-        app.get('/service-get',async(req,res)=>{
-            const result=await serviceCollection.find().toArray()
-           res.send(result)
+        app.get('/service-get', async (req, res) => {
+            const result = await serviceCollection.find().toArray()
+            res.send(result)
         })
         // get helmet data 
-        app.get('/get-helmet',async(req,res)=>{
-            const result=await helmetCollection.find().toArray()
-           res.send(result)
-           console.log(result)
+        app.get('/get-helmet', async (req, res) => {
+            const result = await helmetCollection.find().toArray()
+            res.send(result)
         })
+        // get all parts 
+        app.get('/get-parts', async (req, res) => {
+            const result = await partsCollection.find().toArray()
+            res.send(result)
+
+        })
+        // get all review
+        app.get('/get-review', async (req, res) => {
+            const result = await reviewCollection.find().toArray()
+            res.send(result)
+        })
+
     } finally {
 
     }
