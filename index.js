@@ -7,7 +7,7 @@ const jwt = require('jsonwebtoken');
 app.use(cors())
 app.use(express.json())
 require('dotenv').config()
-
+const stripe = require('stripe')(process.env.STRIPE_TEST_KEY);
 const verifyJwt = (req, res, next) => {
     const authorization = req.headers.authorization
     if (!authorization) {
@@ -50,7 +50,7 @@ const run = async () => {
                 const filter = { _id: ObjectId(id) }
                 const result = await serviceCollection.findOne(filter)
                 res.send(result)
-                console.log(result)
+               
             }else{                                                          
                 res.status(401).send({message:'Forbidden access'})
             }                                                                                                                                                                   
@@ -92,8 +92,25 @@ const run = async () => {
             const filter={_id:ObjectId(id)}
             const result=await usersOrderCollection.findOne(filter)
             res.send(result)
-            console.log(result)
+          
         })
+
+        // update user information and service data 
+        app.put('/payment-complete',async(req,res)=>{
+            console.log('from body',req.body)
+        })
+        // payment intent 
+        app.post('/create-payment-intent', verifyJwt,async(req,res)=>{
+            const {price}=req.body
+            const paymentIntent=await stripe.paymentIntents.create({
+                amount:price * 100,
+                currency:'usd',
+                payment_method_types:['card']
+            })
+            res.send({clientSecret:paymentIntent.client_secret})
+        })
+
+
         app.put('/token', async (req, res) => {
             const email = req.body.email
             const user = req.body
