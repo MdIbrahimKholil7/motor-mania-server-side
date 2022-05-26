@@ -4,6 +4,7 @@ const port = process.env.PORT || 5000
 const cors = require('cors')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jwt = require('jsonwebtoken');
+const { get } = require('express/lib/response');
 app.use(cors())
 app.use(express.json())
 require('dotenv').config()
@@ -30,39 +31,42 @@ console.log(uri)
 const run = async () => {
     try {
         await client.connect();
-        const serviceCollection = client.db('Bike_Parts').collection('services')
-        const helmetCollection = client.db('Bike_Parts').collection('helmet')
-        const partsCollection = client.db('Bike_Parts').collection('parts')
+        const servicesCollection = client.db('Bike_Parts').collection('service')
         const reviewCollection = client.db('Bike_Parts').collection('review')
         const usersOrderCollection = client.db('Bike_Parts').collection('users_order')
+        const usersPaymentCollection = client.db('Bike_Parts').collection('payment-information')
         const userCollection = client.db('Bike_Parts').collection('users')
+        const profileCollection = client.db('Bike_Parts').collection('profile')
         // get service data 
         app.get('/service-get', async (req, res) => {
-            const result = await serviceCollection.find().toArray()
+            const result = await servicesCollection.find().limit(6).toArray()
+
             res.send(result)
         })
         // get service by id 
         app.get('/get-service', verifyJwt, async (req, res) => {
             const id = req.query.id
-            console.log('from ',req.query)
+
             const email = req.query.email
             if (req.decoded.email === email) {
                 const filter = { _id: ObjectId(id) }
-                const result = await serviceCollection.findOne(filter)
+                const result = await servicesCollection.findOne(filter)
                 res.send(result)
-               
-            }else{                                                          
-                res.status(401).send({message:'Forbidden access'})
-            }                                                                                                                                                                   
+
+            } else {
+                res.status(401).send({ message: 'Forbidden access' })
+            }
         })
         // get helmet data 
         app.get('/get-helmet', async (req, res) => {
-            const result = await helmetCollection.find().toArray()
-            res.send(result)
+            const helmet = req.query.name
+            const filter = { category: helmet }
+            const result = await servicesCollection.find(filter).toArray()
+
         })
         // get all parts 
         app.get('/get-parts', async (req, res) => {
-            const result = await partsCollection.find().toArray()
+            const result = await servicesCollection.find().sort({ _id: -1 }).toArray()
             res.send(result)
 
         })
@@ -79,35 +83,80 @@ const run = async () => {
             res.send(result)
         })
         // users order data get 
-        app.get('/users-order-data', verifyJwt,async (req, res) => {
+        app.get('/users-order-data', verifyJwt, async (req, res) => {
             const email = req.query.email
             const filter = { email }
-            const query = usersOrderCollection.find(filter)
+            const query = usersOrderCollection.find(filter).sort({ _id: -1 })
             const result = await query.toArray()
             res.send(result)
         })
-        // get user data for token 
-        app.get('/get-payment/:id',async(req,res)=>{
-            const id=req.params.id
-            const filter={_id:ObjectId(id)}
-            const result=await usersOrderCollection.findOne(filter)
+        // delete user order product 
+        app.delete('/delete-product/:id', async (req, res) => {
+            const id = req.params.id
+            const filter = { _id: ObjectId(id) }
+            const result = await usersOrderCollection.deleteOne(filter)
             res.send(result)
-          
+        })
+
+        // post profile data 
+        app.post('/profile-data', async (req, res) => {
+            const data=req.body
+            const result = await profileCollection.insertOne(data)
+            console.log(result)
+            res.send(result)
+            // console.log(req.body)
+        })
+
+        // get profile data 
+        app.get('/get-profile-data',async(req,res)=>{
+            const email=req.query.email
+            console.log(req.query)
+            const filter={email:email}
+            const result=await profileCollection.findOne(filter)
+            res.send(result)
+            console.log(result)
+        })
+        // get user data for token 
+        app.get('/get-payment/:id', async (req, res) => {
+            const id = req.params.id
+            const filter = { _id: ObjectId(id) }
+            const result = await usersOrderCollection.findOne(filter)
+            res.send(result)
+
         })
 
         // update user information and service data 
-        app.put('/payment-complete',async(req,res)=>{
-            console.log('from body',req.body)
+        app.post('/payment-complete', async (req, res) => {
+            console.log('from body', req.body)
+            const { available, id, _id, name, email, transactionId } = req.body
+            const filter1 = { _id: ObjectId(id) }
+            const filter2 = { _id: ObjectId(_id) }
+            const options = { upsert: true };
+            const updateDoc1 = {
+                $set: {
+                    quantity: available
+                },
+            };
+            const updateDoc2 = {
+                $set: {
+                    paid: true,
+                    transactionId
+                },
+            };
+            const result1 = await servicesCollection.updateOne(filter1, updateDoc1, options)
+            const result2 = await usersOrderCollection.updateOne(filter2, updateDoc2, options)
+            const result3 = await usersPaymentCollection.insertOne({ email, transactionId, })
+            res.send(result3)
         })
         // payment intent 
-        app.post('/create-payment-intent', verifyJwt,async(req,res)=>{
-            const {price}=req.body
-            const paymentIntent=await stripe.paymentIntents.create({
-                amount:price * 100,
-                currency:'usd',
-                payment_method_types:['card']
+        app.post('/create-payment-intent', verifyJwt, async (req, res) => {
+            const { price } = req.body
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: price * 100,
+                currency: 'usd',
+                payment_method_types: ['card']
             })
-            res.send({clientSecret:paymentIntent.client_secret})
+            res.send({ clientSecret: paymentIntent.client_secret })
         })
 
 
