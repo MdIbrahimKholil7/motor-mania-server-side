@@ -252,6 +252,11 @@ const run = async () => {
             const result=await servicesCollection.deleteOne(filter)
             res.send(result)
         })
+        // get user order data 
+        app.get('/get-all-users-order',verifyJwt,async(req,res)=>{
+            const result=await usersOrderCollection.find().toArray()
+            res.send(result)
+        })
         app.put('/token', async (req, res) => {
             const email = req.body.email
             const user = req.body
