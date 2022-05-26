@@ -71,21 +71,21 @@ const run = async () => {
         })
         // get all review   
         app.get('/get-review', async (req, res) => {
-            const result = await reviewCollection.find().sort({_id:-1}).toArray()
+            const result = await reviewCollection.find().sort({ _id: -1 }).toArray()
             res.send(result)
         })
 
         // add user review 
-        app.put ('/add-review',async(req,res)=>{
-            const email=req.query.email
+        app.put('/add-review', async (req, res) => {
+            const email = req.query.email
             console.log(email)
-            const data=req.body
-            const filter={email}
+            const data = req.body
+            const filter = { email }
             const options = { upsert: true };
             const updateDoc = {
                 $set: data
             };
-            const result=await reviewCollection.updateOne(filter,updateDoc,options)
+            const result = await reviewCollection.updateOne(filter, updateDoc, options)
             res.send(result)
             console.log(result)
         })
@@ -151,12 +151,12 @@ const run = async () => {
         // get profile data 
         app.get('/get-profile-data', verifyJwt, async (req, res) => {
             const email = req.query.email
-           
+
             if (email) {
                 const filter = { email: email }
                 const result = await userCollection.findOne(filter)
                 res.send(result)
-           
+
             }
         })
 
@@ -204,42 +204,54 @@ const run = async () => {
         })
 
         // admin api start 
-        app.get('/make-admin',async(req,res)=>{
-            const email=req.query.email
-            const filter={email}
-            const result=await userCollection.findOne(filter)
-            if(result.role){
-                res.send({message:true})
-            }else{
-                res.send({message:false})
+        app.get('/make-admin', async (req, res) => {
+            const email = req.query.email
+            const filter = { email }
+            const result = await userCollection.findOne(filter)
+            if (result.role) {
+                res.send({ message: true })
+            } else {
+                res.send({ message: false })
             }
         })
 
         // get all user 
-        app.get('/get-all-user',verifyJwt,async(req,res)=>{
-            const result=await userCollection.find().sort({_id:-1}).toArray()
+        app.get('/get-all-user', verifyJwt, async (req, res) => {
+            const result = await userCollection.find().sort({ _id: -1 }).toArray()
             res.send(result)
         })
-        app.patch('/make-admin/:id',verifyJwt,async(req,res)=>{
-            const id=req.params.id
-            const filter={_id:ObjectId(id)}
-            const updateDoc={
-                $set:{
-                    role:'admin'
+        app.patch('/make-admin/:id', verifyJwt, async (req, res) => {
+            const id = req.params.id
+            const filter = { _id: ObjectId(id) }
+            const updateDoc = {
+                $set: {
+                    role: 'admin'
                 }
             }
-            const result=await userCollection.updateOne(filter,updateDoc)
+            const result = await userCollection.updateOne(filter, updateDoc)
             res.send(result)
-           
+
+        })
+        // delete user api 
+        app.delete('/delete-admin/:id', verifyJwt, async (req, res) => {
+            const id = req.params.id
+            const filter = { _id: ObjectId(id) }
+            const result = await userCollection.deleteOne(filter)
+            res.send(result)
         })
 
-        app.delete('/delete-admin/:id',verifyJwt,async(req,res)=>{
+        // get all product api 
+        app.get('/get-all-product', verifyJwt, async (req, res) => {
+            const result=await servicesCollection.find().toArray()
+            res.send(result)
+        })
+        // delete product api 
+        app.delete('/delete-service/:id',async(req,res)=>{
             const id=req.params.id
             const filter={_id:ObjectId(id)}
-            const result=await userCollection.deleteOne(filter)
+            const result=await servicesCollection.deleteOne(filter)
             res.send(result)
         })
-
         app.put('/token', async (req, res) => {
             const email = req.body.email
             const user = req.body
