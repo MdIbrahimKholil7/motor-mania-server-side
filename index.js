@@ -19,7 +19,7 @@ const verifyJwt = (req, res, next) => {
         if (err) {
             return res.status(403).send({ message: 'Forbidden' })
         }
-        console.log(decoded)
+
         req.decoded = decoded
         next()
     })
@@ -36,11 +36,10 @@ const run = async () => {
         const usersOrderCollection = client.db('Bike_Parts').collection('users_order')
         const usersPaymentCollection = client.db('Bike_Parts').collection('payment-information')
         const userCollection = client.db('Bike_Parts').collection('users')
-        const profileCollection = client.db('Bike_Parts').collection('profile')
+        // const profileCollection = client.db('Bike_Parts').collection('profile')
         // get service data 
         app.get('/service-get', async (req, res) => {
             const result = await servicesCollection.find().limit(6).toArray()
-
             res.send(result)
         })
         // get service by id 
@@ -72,10 +71,24 @@ const run = async () => {
         })
         // get all review   
         app.get('/get-review', async (req, res) => {
-            const result = await reviewCollection.find().toArray()
+            const result = await reviewCollection.find().sort({_id:-1}).toArray()
             res.send(result)
         })
 
+        // add user review 
+        app.put ('/add-review',async(req,res)=>{
+            const email=req.query.email
+            console.log(email)
+            const data=req.body
+            const filter={email}
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: data
+            };
+            const result=await reviewCollection.updateOne(filter,updateDoc,options)
+            res.send(result)
+            console.log(result)
+        })
         // users order data post 
         app.post('/users-order-data', async (req, res) => {
             const body = req.body.body
@@ -98,24 +111,55 @@ const run = async () => {
             res.send(result)
         })
 
-        // post profile data 
-        app.post('/profile-data', async (req, res) => {
-            const data=req.body
-            const result = await profileCollection.insertOne(data)
-            console.log(result)
+        // put profile data 
+        app.put('/profile-data/:id', async (req, res) => {
+            const data = req.body
+            // console.log(data)
+
+
+            const { name, email, address, phone, education, imgUrl } = data
+            const id = req.params.id
+
+
+            const filter = { _id: ObjectId(id) }
+            const updateDoc = {
+                $set: data
+            }
+            const result = await userCollection.updateOne(filter, updateDoc)
+
+            res.send(result)
+        })
+
+
+        // put profile data
+        app.patch('/update-profile/:email', async (req, res) => {
+            const { address, phone, education } = req.body
+            const email = req.params.email
+            const filter = { email }
+            const updateDoc = {
+                $set: {
+                    education,
+                    address,
+                    phone
+                }
+            }
+            const result = await userCollection.updateOne(filter, updateDoc)
+
             res.send(result)
             // console.log(req.body)
         })
-
         // get profile data 
-        app.get('/get-profile-data',async(req,res)=>{
-            const email=req.query.email
-            console.log(req.query)
-            const filter={email:email}
-            const result=await profileCollection.findOne(filter)
-            res.send(result)
-            console.log(result)
+        app.get('/get-profile-data', verifyJwt, async (req, res) => {
+            const email = req.query.email
+           
+            if (email) {
+                const filter = { email: email }
+                const result = await userCollection.findOne(filter)
+                res.send(result)
+           
+            }
         })
+
         // get user data for token 
         app.get('/get-payment/:id', async (req, res) => {
             const id = req.params.id
@@ -127,7 +171,7 @@ const run = async () => {
 
         // update user information and service data 
         app.post('/payment-complete', async (req, res) => {
-            console.log('from body', req.body)
+
             const { available, id, _id, name, email, transactionId } = req.body
             const filter1 = { _id: ObjectId(id) }
             const filter2 = { _id: ObjectId(_id) }
@@ -159,7 +203,35 @@ const run = async () => {
             res.send({ clientSecret: paymentIntent.client_secret })
         })
 
+        // admin api start 
+        app.get('/make-admin',async(req,res)=>{
+            const email=req.query.email
+            const filter={email}
+            const result=await userCollection.findOne(filter)
+            if(result.role){
+                res.send({message:true})
+            }else{
+                res.send({message:false})
+            }
+        })
 
+        // get all user 
+        app.get('/get-all-user',verifyJwt,async(req,res)=>{
+            const result=await userCollection.find().sort({_id:-1}).toArray()
+            res.send(result)
+        })
+        app.patch('/make-admin/:id',verifyJwt,async(req,res)=>{
+            const id=req.params.id
+            const filter={_id:ObjectId(id)}
+            const updateDoc={
+                $set:{
+                    role:'admin'
+                }
+            }
+            const result=await userCollection.updateOne(filter,updateDoc)
+            res.send(result)
+            console.log(result)
+        })
         app.put('/token', async (req, res) => {
             const email = req.body.email
             const user = req.body
@@ -172,7 +244,7 @@ const run = async () => {
             const accessToken = jwt.sign({ email }, process.env.ACCESS_TOKEN, {
                 expiresIn: '1d'
             })
-            console.log(result)
+
             res.send({ accessToken })
         })
 
