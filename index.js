@@ -230,8 +230,16 @@ const run = async () => {
             }
             const result=await userCollection.updateOne(filter,updateDoc)
             res.send(result)
-            console.log(result)
+           
         })
+
+        app.delete('/delete-admin/:id',verifyJwt,async(req,res)=>{
+            const id=req.params.id
+            const filter={_id:ObjectId(id)}
+            const result=await userCollection.deleteOne(filter)
+            res.send(result)
+        })
+
         app.put('/token', async (req, res) => {
             const email = req.body.email
             const user = req.body
