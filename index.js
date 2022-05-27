@@ -39,7 +39,7 @@ const run = async () => {
         // const profileCollection = client.db('Bike_Parts').collection('profile')
         // get service data 
         app.get('/service-get', async (req, res) => {
-            const result = await servicesCollection.find().limit(6).toArray()
+            const result = await servicesCollection.find().sort({_id:-1}).limit(6).toArray()
             res.send(result)
         })
         // get service by id 
@@ -184,6 +184,8 @@ const run = async () => {
             const updateDoc2 = {
                 $set: {
                     paid: true,
+                    pending: 'Pending',
+                    status: false,
                     transactionId
                 },
             };
@@ -242,21 +244,71 @@ const run = async () => {
 
         // get all product api 
         app.get('/get-all-product', verifyJwt, async (req, res) => {
-            const result=await servicesCollection.find().toArray()
+            const page = Number(req.query.page)
+            const size = Number(req.query.size)
+            console.log(page, size)
+            const cursor = servicesCollection.find()
+            const result = await cursor.skip(page * size).limit(size).toArray()
             res.send(result)
         })
+        // get all product api count
+        app.get('/get-all-product-count', async (req, res) => {
+            const cursor = servicesCollection.find({})
+            const result = await cursor.count()
+            res.send({ result })
+        })
         // delete product api 
-        app.delete('/delete-service/:id',async(req,res)=>{
-            const id=req.params.id
-            const filter={_id:ObjectId(id)}
-            const result=await servicesCollection.deleteOne(filter)
+        app.delete('/delete-service/:id', async (req, res) => {
+            const id = req.params.id
+            const filter = { _id: ObjectId(id) }
+            const result = await servicesCollection.deleteOne(filter)
             res.send(result)
         })
         // get user order data 
-        app.get('/get-all-users-order',verifyJwt,async(req,res)=>{
-            const result=await usersOrderCollection.find().toArray()
+        app.get('/get-all-users-order', verifyJwt, async (req, res) => {
+            const page = Number(req.query.page)
+            const size = Number(req.query.size)
+            console.log(page, size)
+            const cursor = usersOrderCollection.find()
+            const result = await cursor.skip(page * size).limit(size).toArray()
+            res.send(result)
+            console.log(result)
+        })
+        app.get('/get-all-users-order-count', async (req, res) => {
+            const cursor = usersOrderCollection.find({})
+            const result = await cursor.count()
+
+            res.send({ result })
+        })
+        // update payment status 
+        app.patch('/update-status/:id', async (req, res) => {
+            const id = req.params.id
+            console.log(id)
+            const filter = { _id: ObjectId(id) }
+
+            const updateDoc = {
+                $set: {
+                    status: true
+                }
+            }
+            const result = await usersOrderCollection.updateOne(filter, updateDoc)
+            console.log(result)
             res.send(result)
         })
+        // delete user order 
+        app.delete('/delete-userOrder/:id', async (req, res) => {
+            const id = req.params.id
+            console.log(id)
+            const filter = { _id: ObjectId(id) }
+            const result = await usersOrderCollection.deleteOne(filter)
+            res.send(result)
+        })
+        app.post('/addServiceProduct', async (req, res) => {
+            const data=req.body
+            const result=await servicesCollection.insertOne(data)
+            res.send(result)
+        })
+
         app.put('/token', async (req, res) => {
             const email = req.body.email
             const user = req.body
