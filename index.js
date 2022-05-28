@@ -60,8 +60,10 @@ const run = async () => {
         app.get('/get-helmet', async (req, res) => {
             const helmet = req.query.name
             const filter = { category: helmet }
-            const result = await servicesCollection.find(filter).toArray()
-
+            // const result = await servicesCollection.find(filter).toArray()
+            const result= await servicesCollection.find(filter).toArray()
+            console.log(result  )
+            res.send(result)
         })
         // get all parts 
         app.get('/get-parts', async (req, res) => {
