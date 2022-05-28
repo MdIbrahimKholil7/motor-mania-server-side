@@ -7,10 +7,9 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jwt = require('jsonwebtoken');
 // const { get } = require('express/lib/response');
 app.use(cors({
-    origin:['http://localhost:3000','']
+    origin:['http://localhost:3000','https://parts-mania.web.app']
 }))
 app.use(express.json())
-
 const stripe = require('stripe')(process.env.STRIPE_TEST_KEY);
 const verifyJwt = (req, res, next) => {
     const authorization = req.headers.authorization
