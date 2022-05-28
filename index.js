@@ -7,7 +7,8 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jwt = require('jsonwebtoken');
 // const { get } = require('express/lib/response');
 app.use(cors({
-    origin:['http://localhost:3000','https://parts-mania.web.app']
+    origin:['http://localhost:3000','https://parts-mania.web.app'],
+    credentials:true
 }))
 app.use(express.json())
 const stripe = require('stripe')('sk_test_51L112oK2utpV7xig0jOmHp2eoSoktIhtmAJ1oCJtV3mM7yYI7w1e3NKQYKkPJqViX4Ihblcenmf1Aag3cye4Ln0o00AKqnzh4A');
