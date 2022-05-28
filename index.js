@@ -41,7 +41,7 @@ const run = async () => {
         // const profileCollection = client.db('Bike_Parts').collection('profile')
         // get service data 
         app.get('/service-get', async (req, res) => {
-            const result = await servicesCollection.find().sort({_id:-1}).limit(6).toArray()
+            const result = await servicesCollection.find().limit(6).toArray()
             res.send(result)
         })
         // get service by id 
