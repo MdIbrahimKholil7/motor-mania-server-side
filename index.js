@@ -1,13 +1,16 @@
+require('dotenv').config()
 const express = require('express');
 const app = express()
 const port = process.env.PORT || 5000
 const cors = require('cors')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jwt = require('jsonwebtoken');
-const { get } = require('express/lib/response');
-app.use(cors())
+// const { get } = require('express/lib/response');
+app.use(cors({
+    origin:['http://localhost:3000','']
+}))
 app.use(express.json())
-require('dotenv').config()
+
 const stripe = require('stripe')(process.env.STRIPE_TEST_KEY);
 const verifyJwt = (req, res, next) => {
     const authorization = req.headers.authorization
