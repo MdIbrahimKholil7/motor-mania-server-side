@@ -209,7 +209,6 @@ const run = async () => {
             })
             res.send({ clientSecret: paymentIntent.client_secret })
         })
-
         // admin api start 
         app.get('/make-admin', async (req, res) => {
             const email = req.query.email
