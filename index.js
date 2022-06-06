@@ -120,18 +120,13 @@ const run = async () => {
         app.put('/profile-data/:id', async (req, res) => {
             const data = req.body
             // console.log(data)
-
-
             const { name, email, address, phone, education, imgUrl } = data
             const id = req.params.id
-
-
             const filter = { _id: ObjectId(id) }
             const updateDoc = {
                 $set: data
             }
             const result = await userCollection.updateOne(filter, updateDoc)
-
             res.send(result)
         })
 
@@ -156,12 +151,10 @@ const run = async () => {
         // get profile data 
         app.get('/get-profile-data', verifyJwt, async (req, res) => {
             const email = req.query.email
-
             if (email) {
                 const filter = { email: email }
                 const result = await userCollection.findOne(filter)
                 res.send(result)
-
             }
         })
 
@@ -335,10 +328,10 @@ const run = async () => {
     }
 }
 run().catch(console.dir);
-
 app.get('/', async (req, res) => {
     res.send('Dont worry Server is running ')
 })
+// server listening 
 app.listen(port, () => {
     console.log('Port running on ', port)
 })
