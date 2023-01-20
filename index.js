@@ -8,10 +8,12 @@ const jwt = require('jsonwebtoken');
 // const { get } = require('express/lib/response');
 app.use(cors({
     origin:['http://localhost:3000','https://parts-mania.web.app'],
-    credentials:true
+    credentials:true,
+    optionSuccessStatus:200
 }))
 app.use(express.json())
 const stripe = require('stripe')('sk_test_51L112oK2utpV7xig0jOmHp2eoSoktIhtmAJ1oCJtV3mM7yYI7w1e3NKQYKkPJqViX4Ihblcenmf1Aag3cye4Ln0o00AKqnzh4A');
+
 const verifyJwt = (req, res, next) => {
     const authorization = req.headers.authorization
     if (!authorization) {
@@ -30,7 +32,7 @@ const verifyJwt = (req, res, next) => {
 
 const uri = `mongodb+srv://${process.env.USER_NAME}:${process.env.USER_PASS}@cluster0.e98yk.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
-console.log(uri)
+
 const run = async () => {
     try {
         await client.connect();
@@ -231,6 +233,7 @@ const run = async () => {
             res.send(result)
 
         })
+
         // delete user api 
         app.delete('/delete-admin/:id', verifyJwt, async (req, res) => {
             const id = req.params.id
@@ -248,12 +251,14 @@ const run = async () => {
             const result = await cursor.skip(page * size).limit(size).toArray()
             res.send(result)
         })
+
         // get all product api count
         app.get('/get-all-product-count', async (req, res) => {
             const cursor = servicesCollection.find({})
             const result = await cursor.count()
             res.send({ result })
         })
+
         // delete product api 
         app.delete('/delete-service/:id', async (req, res) => {
             const id = req.params.id
@@ -261,6 +266,7 @@ const run = async () => {
             const result = await servicesCollection.deleteOne(filter)
             res.send(result)
         })
+
         // get user order data 
         app.get('/get-all-users-order', verifyJwt, async (req, res) => {
             const page = Number(req.query.page)
@@ -271,12 +277,14 @@ const run = async () => {
             res.send(result)
             console.log(result)
         })
+
         app.get('/get-all-users-order-count', async (req, res) => {
             const cursor = usersOrderCollection.find({})
             const result = await cursor.count()
 
             res.send({ result })
         })
+
         // update payment status 
         app.patch('/update-status/:id', async (req, res) => {
             const id = req.params.id
@@ -292,6 +300,7 @@ const run = async () => {
             console.log(result)
             res.send(result)
         })
+
         // delete user order 
         app.delete('/delete-userOrder/:id', async (req, res) => {
             const id = req.params.id
@@ -300,6 +309,7 @@ const run = async () => {
             const result = await usersOrderCollection.deleteOne(filter)
             res.send(result)
         })
+
         app.post('/addServiceProduct', async (req, res) => {
             const data=req.body
             const result=await servicesCollection.insertOne(data)
@@ -321,7 +331,6 @@ const run = async () => {
 
             res.send({ accessToken })
         })
-
 
     } finally {
 
