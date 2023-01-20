@@ -47,6 +47,7 @@ const run = async () => {
             const result = await servicesCollection.find().limit(6).toArray()
             res.send(result)
         })
+        
         // get service by id 
         app.get('/get-service', verifyJwt, async (req, res) => {
             const id = req.query.id
